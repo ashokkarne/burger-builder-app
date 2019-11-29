@@ -17,10 +17,36 @@ class ContactData extends Component {
        const updatedFormElement =  { ...updatedOrderForm[inputIdentifier]};
        updatedFormElement.value=event.target.value;
 
+       updatedFormElement.valid = this.checkValidity(updatedFormElement.value,updatedFormElement.validation );
+       updatedFormElement.touched=true;
        updatedOrderForm[inputIdentifier]=updatedFormElement;
-       
-      this.setState({orderForm:updatedOrderForm});
+       console.log(updatedFormElement);
 
+       let formValid=true;
+       for(let inputIdentifier in updatedOrderForm){
+          
+            formValid=updatedOrderForm[inputIdentifier].valid && formValid;
+           
+       }
+      this.setState({orderForm:updatedOrderForm, formValid:formValid});
+
+    }
+
+    checkValidity(value,rules){
+        let valid=false;
+        if(rules.required){
+         valid = value.trim()!=='';
+        }
+       
+
+        if(valid && rules.minLength){
+            valid = value.trim().length>= rules.minLength;
+        }
+      
+        if(valid && rules.maxLength){
+            valid = value.trim().length<= rules.maxLength;
+        }
+         return valid;
     }
 
     state = {
@@ -31,7 +57,10 @@ class ContactData extends Component {
                             type:"text",
                             placeholder:'Name'
                           } ,
-                          value:''
+                          value:'',
+                          validation: { required:true},
+                          valid:false,
+                          touched:false
                     },
                    
       
@@ -40,39 +69,65 @@ class ContactData extends Component {
                 type:"text",
                 placeholder:"Street"
               } ,
-              value:''
+              value:'',
+              validation: { required:true},
+              valid:false,
+              touched:false
         },
         city:{  elementType:"input",
             elementConfig: {
                type:"text",
                placeholder:"City"
              } ,
-             value:''
+             value:'',
+             validation: { required:true},
+             valid:false,
+             touched:false
+       },
+       zipCode: {
+        elementType:"input",
+        elementConfig: {
+            type:"text",
+            placeholder:"ZIP Code"
+          } ,
+          value:'',
+             validation: { required:true, minLength:5, maxLength:5},
+             valid:false,
+             touched:false
        },
             country:{  elementType:"input",
             elementConfig: {
                type:"text",
                placeholder:"Country"
              } ,
-             value:''
+             value:'',
+             validation: { required:true},
+             valid:false,
+             touched:false
        },      
              email: {  elementType:"input",
              elementConfig: {
                 type:"email",
                 placeholder:"E-Mail"
               } ,
-              value:''
+              value:'',
+              validation: { required:true},
+              valid:false,
+              touched:false
         },
           deliveryMethod:{  elementType:"select",
           elementConfig: {
             options: [ {value:'fastest', displayValue:"Fastest" },
             {value:'cheapest', displayValue:"Cheapest" }]
            } ,
-           value:''
+           value:'fastest',
+           valid:true,
+           validation:{}
+          
      } 
 
       },
-
+        formValid:false,
         loading:false
 
     }
@@ -82,22 +137,17 @@ class ContactData extends Component {
 
         event.preventDefault();
         
+        const formData ={};
+        for(let formElementIdentifier in this.state.orderForm){
+            formData[formElementIdentifier]= this.state.orderForm[formElementIdentifier].value;
+        }
+
         this.setState({loading:true});
 
         const order = {
             ingredients: this.props.ingredients,
             price: this.state.price,
-            customer: {
-                name:"Ashok",
-                address: {
-                    street: "60 absolute",
-                    city:"Mississauga",
-                    country:"Canada"
-                },
-               email: "ashok@gmail.com"
-    
-            },
-            deliveryMethod:"fastest" 
+            orderData: formData          
     
         }
 
@@ -130,19 +180,23 @@ class ContactData extends Component {
      }
 
         let form= ( 
-        <div>
+       <form onSubmit={this.orderHandler}>
            {formElementsArray.map( formElement => (
               <Input elementType={formElement.config.elementType} 
               elementConfig={formElement.config.elementConfig}  key={formElement.id} 
-              value={formElement.config.value}  changed={ (event) => this.inputChangedHandler(event,formElement.id)} />
+              value={formElement.config.value} 
+              invalid={!formElement.config.valid}  
+              shouldValidate = {formElement.config.validation}
+              touched = {formElement.config.touched}
+              changed={ (event) => this.inputChangedHandler(event,formElement.id)} />
            ))} 
            {/*<Input elementType="input" label="Name" name="name" placeholder="Enter Your Name"  />
           
            <Input inputType="input"  label="Email"  name="email" placeholder="Enter Your Mail" />
            <Input inputType="input"  label="Street" name="street" placeholder="Enter Your Street" />
         <Input inputType="input" label="Postal Code" name="postalcode" placeholder="Enter Your Postal Code" />*/}
-        <Button btnType="Success" clicked={this.orderHandler}>ORDER</Button>
-        </div>) ;
+        <Button btnType="Success" disabled={!this.state.formValid}>ORDER</Button>
+        </form>) ;
 
         if(this.state.loading){
             form =<Spinner />;
