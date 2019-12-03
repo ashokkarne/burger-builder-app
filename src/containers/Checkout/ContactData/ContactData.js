@@ -91,9 +91,9 @@ class ContactData extends Component {
             placeholder:"ZIP Code"
           } ,
           value:'',
-             validation: { required:true, minLength:5, maxLength:5},
-             valid:false,
-             touched:false
+          validation: { required:true, minLength:5, maxLength:5},
+          valid:false,
+          touched:false
        },
             country:{  elementType:"input",
             elementConfig: {
